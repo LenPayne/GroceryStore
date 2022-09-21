@@ -13,7 +13,7 @@ namespace GroceryStore.Models
         protected override void Seed(ApplicationDbContext context)
         {
             ApplicationUser user1 = new ApplicationUser { 
-                UserName = "LenPayne",
+                UserName = "len.payne@lambtoncollege.ca",
                 Email = "len.payne@lambtoncollege.ca",
                 DateOfBirth = new DateTime(2000, 1, 1)
             };

@@ -4,9 +4,11 @@ using System.Data;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
+using System.Security.Claims;
 using System.Web;
 using System.Web.Mvc;
 using GroceryStore.Models;
+using Microsoft.AspNet.Identity;
 
 namespace GroceryStore.Controllers
 {
@@ -18,13 +20,58 @@ namespace GroceryStore.Controllers
         [AllowAnonymous]
         public ActionResult Index()
         {
-            return View(db.GroceryItems.Where(a => a.Owner != null).ToList());
+            return View(db.GroceryItems.Where(a => a.Owner == null).ToList());
         }
 
         // GET: MyGroceries
+        [Authorize]
         public ActionResult MyGroceries()
         {
-            return View(db.GroceryItems.Where(a => a.Owner == HttpContext.User).ToList());
+            return View("MyGroceries", db.GroceryItems.Include(x => x.Owner)
+                        .Where(a => a.Owner.UserName == User.Identity.Name)
+                        .ToList());
+        }
+
+        [HttpGet]
+        [Authorize]
+        public ActionResult Buy(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            GroceryItem groceryItem = db.GroceryItems.Find(id);
+            if (groceryItem == null)
+            {
+                return HttpNotFound();
+            }
+            return View(groceryItem);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Buy(GroceryItem groceryItem)
+        {
+            var user = db.Users.Include(x => x.GroceryItems)
+                .Where(x => x.UserName == User.Identity.Name)
+                .First();
+            var grocery = db.GroceryItems.Find(groceryItem.Id);
+            
+            var claimUser = (ClaimsPrincipal)User;
+            var dateOfBirth = Convert.ToDateTime(
+                claimUser.Claims.Where(claim => claim.Type == ClaimTypes.DateOfBirth)
+                .First()
+                .Value);
+            var age = DateTime.Now.Subtract(dateOfBirth);
+
+            if (age.Days >= 365*19) {
+                grocery.Owner = user;
+                user.GroceryItems.Add(grocery);
+                db.SaveChanges();
+            }
+
+            return RedirectToAction("MyGroceries");
         }
 
         // GET: GroceryItems/Details/5
