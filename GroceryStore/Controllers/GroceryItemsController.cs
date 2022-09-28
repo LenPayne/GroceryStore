@@ -103,7 +103,7 @@ namespace GroceryStore.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public ActionResult Create([Bind(Include = "Id,Name,isAlochol,Department")] GroceryItem groceryItem)
+        public ActionResult Create([Bind(Include = "Id,Name,isAlochol,Department,Weight")] GroceryItem groceryItem)
         {
             if (ModelState.IsValid)
             {
