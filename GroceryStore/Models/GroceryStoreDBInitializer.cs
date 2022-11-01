@@ -46,6 +46,34 @@ namespace GroceryStore.Models
                 isAlochol = true,
                 Department = "Canned Goods"
             });
+            context.GroceryItems.Add(new GroceryItem
+            {
+                Id = 3,
+                Name = "Grapes",
+                isAlochol = false,
+                Department = "Fresh Produce"
+            });
+            context.GroceryItems.Add(new GroceryItem
+            {
+                Id = 4,
+                Name = "Apples",
+                isAlochol = false,
+                Department = "Fresh Produce"
+            });
+            context.GroceryItems.Add(new GroceryItem
+            {
+                Id = 5,
+                Name = "Green Beans",
+                isAlochol = false,
+                Department = "Canned Goods"
+            });
+            context.GroceryItems.Add(new GroceryItem
+            {
+                Id = 6,
+                Name = "Dried Beans",
+                isAlochol = false,
+                Department = "Dry Goods"
+            });
 
             base.Seed(context);
         }

@@ -1,0 +1,10 @@
+﻿@model IEnumerable<GroceryStore.Models.GroceryItem>
+
+@{
+    ViewBag.Title = "Grocery Items by Department";
+}
+
+<h2>By Department</h2>
+
+@Html.Partial("_GroceryListPartial", Model)
+

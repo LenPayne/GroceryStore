@@ -8,6 +8,8 @@ using System.Security.Claims;
 using System.Web;
 using System.Web.Mvc;
 using GroceryStore.Models;
+using GroceryStore.Models.ViewModels;
+using GroceryStore.Services;
 using Microsoft.AspNet.Identity;
 
 namespace GroceryStore.Controllers
@@ -15,12 +17,21 @@ namespace GroceryStore.Controllers
     public class GroceryItemsController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
+        private GroceryService groceryService;
+
+        private void Init()
+        {
+            groceryService = new GroceryService(db);
+        }
 
         // GET: GroceryItems
         [AllowAnonymous]
         public ActionResult Index()
         {
-            return View(db.GroceryItems.Where(a => a.Owner == null).ToList());
+            Init();
+            IEnumerable<string> departments = groceryService.GetDepartments();
+            DepartmentViewModel dvm = new DepartmentViewModel(groceryService, departments);
+            return View(dvm);
         }
 
         // GET: MyGroceries
@@ -30,6 +41,20 @@ namespace GroceryStore.Controllers
             return View("MyGroceries", db.GroceryItems.Include(x => x.Owner)
                         .Where(a => a.Owner.UserName == User.Identity.Name)
                         .ToList());
+        }
+
+        // GET: ByDepartment
+        public ActionResult ByDepartment(string department)
+        {
+            Init();
+            return View("ByDepartment", groceryService.GetItemsByDepartment(department));
+        }
+
+        // GET: GetItemsByDepartment
+        public ActionResult GetItemsByDepartment(string department)
+        {
+            Init();
+            return View("_GroceryListPartial", groceryService.GetItemsByDepartment(department));
         }
 
         [HttpGet]
@@ -94,7 +119,12 @@ namespace GroceryStore.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult Create()
         {
-            return View();
+            Init();
+            CreateGroceryItemViewModel cgivm = new CreateGroceryItemViewModel
+            {
+                DepartmentDropDown = groceryService.GetDepartmentSelectListItems(null)
+            };
+            return View(cgivm);
         }
 
         // POST: GroceryItems/Create
@@ -119,16 +149,26 @@ namespace GroceryStore.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult Edit(int? id)
         {
+            Init();
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            GroceryItem groceryItem = db.GroceryItems.Find(id);
+            GroceryItem groceryItem = groceryService.GetItemById(id);
             if (groceryItem == null)
             {
                 return HttpNotFound();
             }
-            return View(groceryItem);
+            EditGroceryItemViewModel egivm = new EditGroceryItemViewModel
+            {
+                DepartmentDropDown = groceryService.GetDepartmentSelectListItems(groceryItem.Department),
+                Id = groceryItem.Id,
+                Name = groceryItem.Name,
+                isAlochol = groceryItem.isAlochol,
+                Department = groceryItem.Department,
+                Weight = groceryItem.Weight
+            };
+            return View(egivm);
         }
 
         // POST: GroceryItems/Edit/5
@@ -137,7 +177,7 @@ namespace GroceryStore.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public ActionResult Edit([Bind(Include = "Id,Name,isAlochol,Department")] GroceryItem groceryItem)
+        public ActionResult Edit([Bind(Include = "Id,Name,isAlochol,Department,Weight")] GroceryItem groceryItem)
         {
             if (ModelState.IsValid)
             {
