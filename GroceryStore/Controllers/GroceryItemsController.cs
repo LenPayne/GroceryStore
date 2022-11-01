@@ -54,7 +54,7 @@ namespace GroceryStore.Controllers
         public ActionResult GetItemsByDepartment(string department)
         {
             Init();
-            return View("_GroceryListPartial", groceryService.GetItemsByDepartment(department));
+            return PartialView("_GroceryListPartial", groceryService.GetItemsByDepartment(department));
         }
 
         [HttpGet]
