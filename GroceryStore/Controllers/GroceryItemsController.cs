@@ -16,19 +16,19 @@ namespace GroceryStore.Controllers
 {
     public class GroceryItemsController : Controller
     {
-        private ApplicationDbContext db = new ApplicationDbContext();
+        private ApplicationDbContext db;
         private GroceryService groceryService;
 
-        private void Init()
+        public GroceryItemsController(ApplicationDbContext db, GroceryService groceryService)
         {
-            groceryService = new GroceryService(db);
+            this.db = db;
+            this.groceryService = groceryService;
         }
 
         // GET: GroceryItems
         [AllowAnonymous]
         public ActionResult Index()
         {
-            Init();
             IEnumerable<string> departments = groceryService.GetDepartments();
             DepartmentViewModel dvm = new DepartmentViewModel(groceryService, departments);
             return View(dvm);
@@ -46,14 +46,12 @@ namespace GroceryStore.Controllers
         // GET: ByDepartment
         public ActionResult ByDepartment(string department)
         {
-            Init();
             return View("ByDepartment", groceryService.GetItemsByDepartment(department));
         }
 
         // GET: GetItemsByDepartment
         public ActionResult GetItemsByDepartment(string department)
         {
-            Init();
             return PartialView("_GroceryListPartial", groceryService.GetItemsByDepartment(department));
         }
 
@@ -119,7 +117,6 @@ namespace GroceryStore.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult Create()
         {
-            Init();
             CreateGroceryItemViewModel cgivm = new CreateGroceryItemViewModel
             {
                 DepartmentDropDown = groceryService.GetDepartmentSelectListItems(null)
@@ -133,23 +130,23 @@ namespace GroceryStore.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public ActionResult Create([Bind(Include = "Id,Name,isAlochol,Department,Weight")] GroceryItem groceryItem)
+        public JsonResult Create([Bind(Include = "Id,Name,isAlochol,Department,Weight")] GroceryItem groceryItem)
         {
             if (ModelState.IsValid)
             {
                 db.GroceryItems.Add(groceryItem);
                 db.SaveChanges();
-                return RedirectToAction("Index");
+                return Json(new {text = "Success!"});
             }
 
-            return View(groceryItem);
+            Response.StatusCode = 400;
+            return Json(new { text = "Something went wrong!" });
         }
 
         // GET: GroceryItems/Edit/5
         [Authorize(Roles = "Admin")]
         public ActionResult Edit(int? id)
         {
-            Init();
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
@@ -177,15 +174,16 @@ namespace GroceryStore.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public ActionResult Edit([Bind(Include = "Id,Name,isAlochol,Department,Weight")] GroceryItem groceryItem)
+        public JsonResult Edit([Bind(Include = "Id,Name,isAlochol,Department,Weight")] GroceryItem groceryItem)
         {
             if (ModelState.IsValid)
             {
                 db.Entry(groceryItem).State = EntityState.Modified;
                 db.SaveChanges();
-                return RedirectToAction("Index");
+                return Json(new { text = "Success!" });
             }
-            return View(groceryItem);
+            Response.StatusCode = 400;
+            return Json(new { text = "Something went wrong!" } );
         }
 
         // GET: GroceryItems/Delete/5

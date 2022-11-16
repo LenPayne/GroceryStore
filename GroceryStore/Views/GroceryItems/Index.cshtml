@@ -9,6 +9,7 @@
 @foreach (string department in Model.Departments)
 {
     <h3>@department</h3>
-    Html.RenderPartial("_GroceryListPartial", Model.GroceryService.GetItemsByDepartment(department));
-    // Other Solution: Html.RenderAction("GetItemsByDepartment", new { department = department });
+    //Html.RenderPartial("_GroceryListPartial", Model.GroceryService.GetItemsByDepartment(department));
+    // Other Solution:
+    Html.RenderAction("GetItemsByDepartment", new { department = department });
 }

@@ -1,4 +1,5 @@
-﻿using GroceryStore.Models;
+﻿using GroceryStore.Interfaces;
+using GroceryStore.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Web.Mvc;
 
 namespace GroceryStore.Services
 {
-    public class GroceryService
+    public class GroceryService : IGroceryService
     {
         private ApplicationDbContext context;
         public GroceryService(ApplicationDbContext context)
@@ -49,23 +50,23 @@ namespace GroceryStore.Services
 
         public IEnumerable<string> GetDepartments()
         {
-            List<string> result = new List<String>();
-            foreach (GroceryItem item in context.GroceryItems)
-            {
-                if (!result.Contains(item.Department)) result.Add(item.Department);
-            }
-            result.Sort();
-            return result;
+            //List<string> result = new List<String>();
+            //foreach (GroceryItem item in context.GroceryItems)
+            //{
+            //    if (!result.Contains(item.Department)) result.Add(item.Department);
+            //}
+            //result.Sort();
+            //return result;
+            return context.GroceryItems.Select(x => x.Department).Distinct();
         }
 
         public List<SelectListItem> GetDepartmentSelectListItems(string SelectedDepartment)
         {
-            List<SelectListItem> result = new List<SelectListItem>();
-            foreach (string department in GetDepartments())
-            {
-                result.Add(new SelectListItem { Text = department, Value = department, Selected = (department == SelectedDepartment) });
-            }
-            return result;
+            return GetDepartments().Select(x => new SelectListItem { 
+                Text = x, 
+                Value = x, 
+                Selected = (x == SelectedDepartment) 
+            }).ToList();
         }
     }
 }
